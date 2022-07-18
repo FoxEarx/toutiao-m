@@ -11,25 +11,28 @@
       <van-tab :title="item.name" v-for="item in myChannels" :key="item.id">
         <ArticleList :id="item.id"></ArticleList>
       </van-tab>
-      <span class="iconfont icon-gengduo"></span>
+      <span class="iconfont icon-gengduo" @click="showPopup"></span>
     </van-tabs>
+    <Popup ref="popup" :myChannel="myChannels"></Popup>
   </div>
 </template>
 
 <script>
 import { getMyChannels } from '@/api'
 import ArticleList from './components/ArticleList.vue'
+import Popup from './components/Popup'
 export default {
   name: 'Home',
   created () {
     this.getMyChannels()
   },
   components: {
-    ArticleList
+    ArticleList,
+    Popup
   },
   data () {
     return {
-      active: 2,
+      active: 0,
       myChannels: []
     }
   },
@@ -41,6 +44,9 @@ export default {
       } catch (error) {
         this.$toast.fail('请重新获取列表频道')
       }
+    },
+    showPopup () {
+      this.$refs.popup.show = true
     }
   }
 }
@@ -105,7 +111,7 @@ export default {
   text-align: center;
   opacity: 0.6;
   border-bottom: 1px solid #eee;
-
+  z-index: 9999;
   &::after {
     content: '';
     position: absolute;
@@ -116,5 +122,26 @@ export default {
     width: 1px;
     background-image: url('~@/assets/images/gradient-gray-line.png');
   }
+}
+// 头部固定的样式
+.navbar {
+  position: sticky;
+  top: 0;
+  left: 0;
+}
+:deep(.van-tabs__wrap) {
+  position: sticky;
+  top: 92px;
+  left: 0;
+  z-index: 99;
+}
+.toutiao-gengduo {
+  position: fixed;
+  top: 92px;
+}
+
+:deep(.van-tabs__content) {
+  max-height: calc(100vh - 92px - 82px - 100px);
+  overflow: auto;
 }
 </style>

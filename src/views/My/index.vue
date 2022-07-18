@@ -76,6 +76,7 @@
 <script>
 import { getUserInfo } from '@/api/user'
 export default {
+  name: 'My',
   data () {
     return {
       UserInfo: {}
