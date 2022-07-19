@@ -9,31 +9,38 @@
     <div class="popupMain">
       <div class="my-channel">
         <van-cell title="我的频道">
-          <van-button size="small" round class="edit-btn">编辑</van-button>
+          <van-button
+            size="small"
+            round
+            class="edit-btn"
+            @click="isEdit = !isEdit"
+            >{{ isEdit ? '完成' : '编辑' }}</van-button
+          >
         </van-cell>
         <van-grid :border="false" gutter="10px">
           <van-grid-item
             :text="item.name"
-            v-for="item in myChannel"
+            v-for="(item, index) in myChannel"
             :key="item.id"
+            :class="{ 'active-channel': item.name == '推荐' }"
+            @click="onClickmychannel(item, index)"
           >
             <template #icon>
-              <van-icon name="cross" />
+              <van-icon name="cross" v-show="isEdit && item.name !== '推荐'" />
             </template>
           </van-grid-item>
         </van-grid>
       </div>
       <div class="recommend-channel">
         <div class="my-channel">
-          <van-cell title="推荐频道">
-            <van-button size="small" round class="edit-btn">编辑</van-button>
-          </van-cell>
+          <van-cell title="推荐频道"> </van-cell>
           <van-grid :border="false" gutter="10px">
             <van-grid-item
               v-for="item in recommendChannel"
               :key="item.id"
               :text="item.name"
               icon="plus"
+              @click="addChannel(item)"
             >
             </van-grid-item>
           </van-grid>
@@ -49,7 +56,8 @@ export default {
   data () {
     return {
       show: false,
-      allChannels: []
+      allChannels: [],
+      isEdit: false
     }
   },
   props: {
@@ -66,6 +74,18 @@ export default {
       const { data } = await getAllChannels()
       console.log('全部推荐', data)
       this.allChannels = data.data.channels
+    },
+    onClickmychannel (channel, index) {
+      if (this.isEdit && channel.name !== '推荐') {
+        return this.$emit('delChannel', channel.id)
+      }
+      if (!this.isEdit) {
+        this.show = false
+        this.$emit('changeActive', index)
+      }
+    },
+    addChannel (mychannel) {
+      this.$emit('addChannel', { ...mychannel })
     }
   },
   computed: {
@@ -79,6 +99,11 @@ export default {
 </script>
 
 <style scoped lang="less">
+.active-channel {
+  :deep(.van-grid-item__text) {
+    color: red;
+  }
+}
 .popupMain {
   padding-top: 100px;
   .edit-btn {

@@ -116,6 +116,7 @@ export default {
           this.UserInfo = data
           console.log(data)
         } catch (error) {
+          console.log(error)
           this.$toast.fail('登录失败')
         }
       }

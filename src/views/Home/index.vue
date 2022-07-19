@@ -13,12 +13,24 @@
       </van-tab>
       <span class="iconfont icon-gengduo" @click="showPopup"></span>
     </van-tabs>
-    <Popup ref="popup" :myChannel="myChannels"></Popup>
+    <Popup
+      ref="popup"
+      :myChannel="myChannels"
+      @delChannel="delChannel"
+      @changeActive="changeActive"
+      @addChannel="addChannel"
+    ></Popup>
   </div>
 </template>
 
 <script>
-import { getMyChannels } from '@/api'
+import {
+  getMyChannels,
+  getChannel,
+  setChannel,
+  delChannels,
+  addChannels
+} from '@/api'
 import ArticleList from './components/ArticleList.vue'
 import Popup from './components/Popup'
 export default {
@@ -36,17 +48,57 @@ export default {
       myChannels: []
     }
   },
+  computed: {},
   methods: {
+    islogin () {
+      return !!this.$store.state.user.token
+    },
     async getMyChannels () {
       try {
-        const { data } = await getMyChannels()
-        this.myChannels = data.data.channels
+        if (!this.islogin()) {
+          const myChannels = getChannel()
+          this.myChannels = myChannels
+        } else {
+          const { data } = await getMyChannels()
+          this.myChannels = data.data.channels
+        }
       } catch (error) {
         this.$toast.fail('请重新获取列表频道')
+        console.log(error)
       }
     },
     showPopup () {
       this.$refs.popup.show = true
+    },
+    async delChannel (id) {
+      this.myChannels = this.myChannels.filter((item) => item.id !== id)
+      if (!this.islogin()) {
+        setChannel(this.myChannels)
+      } else {
+        try {
+          await delChannels(id)
+          this.$toast.success('删除成功')
+        } catch (error) {
+          this.$toast.fail('删除失败')
+        }
+      }
+    },
+    changeActive (index) {
+      this.active = index
+    },
+    async addChannel (item) {
+      this.myChannels.push(item)
+      if (!this.islogin()) {
+        setChannel(this.myChannels)
+      } else {
+        try {
+          await addChannels(item.id, this.myChannels.length)
+          this.$toast.success('添加成功')
+        } catch (error) {
+          console.log(error)
+          this.$toast.fail('添加失败')
+        }
+      }
     }
   }
 }

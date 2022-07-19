@@ -81,6 +81,7 @@ export default {
 
         this.pre_timestamp = data.data.pre_timestamp
       } catch (error) {
+        console.log(error)
         this.error = true
       } finally {
         this.loading = false

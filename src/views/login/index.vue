@@ -112,7 +112,7 @@ export default {
         await sendCode(this.mobile)
         this.isShowCountDown = true
       } catch (err) {
-        // console.dir(err)
+        console.log(err)
         if (!err.response) {
           this.$toast.fail(err.message)
         } else {
