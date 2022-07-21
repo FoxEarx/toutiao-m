@@ -16,7 +16,7 @@ class Storage {
   }
 
   remove (key) {
-    localStorage.removeItemk(key)
+    localStorage.removeItem(key)
   }
 }
 const storage = new Storage()

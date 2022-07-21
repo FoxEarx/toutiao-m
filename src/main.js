@@ -9,7 +9,7 @@ import Vant from 'vant'
 import 'vant/lib/index.css'
 // 引入移动端适配文件amfe-flexible
 import 'amfe-flexible/index.min.js'
-
+import '../node_modules/github-markdown-css/github-markdown.css'
 Vue.use(Vant)
 Vue.config.productionTip = false
 

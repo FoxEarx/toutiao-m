@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div @click="toDeta(articleInfo.art_id)">
     <!-- 渲染无图片 -->
     <van-cell
       v-if="articleInfo.cover.type === 0"
@@ -49,9 +49,14 @@ export default {
   computed: {
     articleDesc () {
       const time = dayjs(this.articleInfo.pubdate).fromNow()
-
       const str = `${this.articleInfo.aut_name} ${this.articleInfo.comm_count}评论 ${time}`
       return str
+    }
+  },
+  methods: {
+    toDeta (id) {
+      console.log(id)
+      this.$router.push({ path: '/deta', query: { id } })
     }
   }
 }
