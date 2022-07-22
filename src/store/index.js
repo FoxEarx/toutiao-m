@@ -23,6 +23,10 @@ export default new Vuex.Store({
     },
     setSearch (state, payload) {
       state.Search.unshift(payload)
+      function fn (arr) {
+        return arr.filter((item, index, arr) => arr.indexOf(item) === index)
+      }
+      state.Search = fn(state.Search)
       setSearchHistory(state.Search)
     },
     removeSearchHistory (state) {

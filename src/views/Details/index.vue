@@ -1,78 +1,125 @@
 <template>
-  <div>
-    <Nav :nav="'黑马头条'"></Nav>
-    <h1 class="theme">{{ info.title }}</h1>
-    <div class="author">
-      <van-image width="34" height="34" round :src="info.aut_photo" />
-      <div class="name">
-        <p>{{ info.aut_name }}</p>
-        <span>{{ articleDesc }}</span>
-      </div>
-      <van-button
-        :loading="jiazai"
-        type="info"
-        round
-        @click="Focus"
-        :class="{ add: info.is_followed }"
-        >{{ info.is_followed ? '已关注' : '+关注' }}</van-button
-      >
-    </div>
-    <div class="article-content markdown-body" v-html="info.content"></div>
-    <!-- 底部 -->
-    <van-goods-action>
-      <div class="pinglun" @click="show = !show">写评论</div>
-      <div class="xtb">
-        <van-goods-action-icon>
-          <template #icon>
-            <van-badge :content="0">
-              <van-icon name="comment-o" />
-            </van-badge>
-          </template>
-        </van-goods-action-icon>
-        <van-goods-action-icon @click="collection">
-          <template #icon>
-            <van-icon name="star-o" />
-          </template>
-        </van-goods-action-icon>
-        <van-goods-action-icon>
-          <template #icon>
-            <van-icon name="good-job-o" />
-          </template>
-        </van-goods-action-icon>
-        <van-goods-action-icon>
-          <template #icon>
-            <van-icon name="share" />
-          </template>
-        </van-goods-action-icon>
-      </div>
-    </van-goods-action>
-    <van-popup
-      class="liuyanBox"
-      round
-      v-model="show"
-      position="bottom"
-      :style="{ height: '20%' }"
+  <div class="box">
+    <van-list
+      v-model="loading"
+      :error.sync="error"
+      error-text="请求失败，点击重新加载"
+      @load="onLoad"
+      :offset="100"
+      :immediate-check="false"
+      :finished="finished"
+      finished-text="没有更多了"
     >
-      <div class="liuyan">
-        <van-field
-          v-model="message"
-          rows="2"
-          autosize
-          type="textarea"
-          maxlength="50"
-          placeholder="请输入评论"
-          show-word-limit
-        />
+      <Nav :nav="'黑马头条'"></Nav>
+      <h1 class="theme">{{ info.title }}</h1>
+      <div class="author">
+        <van-image width="34" height="34" round :src="info.aut_photo" />
+        <div class="name">
+          <p>{{ info.aut_name }}</p>
+          <span>{{ articleDesc }}</span>
+        </div>
+        <van-button
+          :loading="jiazai"
+          type="info"
+          round
+          @click="Focus"
+          :class="{ add: info.is_followed }"
+          >{{ info.is_followed ? '已关注' : '+关注' }}</van-button
+        >
       </div>
-      <van-button type="default">发布</van-button>
-    </van-popup>
+      <!-- 正文 -->
+      <div
+        class="article-content markdown-body"
+        v-html="info.content"
+        ref="contentRef"
+      ></div>
+      <van-divider class="zwjs">正文结束</van-divider>
+      <!-- 评论 -->
+      <Comments :commentsList="commentsList"></Comments>
+      <!-- 图片详情 -->
+      <van-image-preview
+        v-model="showImg"
+        :images="allImg"
+        @change="onChange"
+        :start-position="start"
+      >
+        <template v-slot:index>{{ index }}</template>
+      </van-image-preview>
+      <!-- 底部 -->
+      <van-goods-action>
+        <div class="pinglun" @click="show = !show">写评论</div>
+        <div class="xtb">
+          <van-goods-action-icon>
+            <template #icon>
+              <van-badge :content="info.comm_count">
+                <van-icon name="comment-o" />
+              </van-badge>
+            </template>
+          </van-goods-action-icon>
+          <van-goods-action-icon @click="collection">
+            <template #icon>
+              <van-icon
+                name="star"
+                :color="info.is_collected ? '#3296fa' : '#595c5a'"
+              />
+            </template>
+          </van-goods-action-icon>
+          <van-goods-action-icon @click="like">
+            <template #icon>
+              <van-badge :content="info.like_count">
+                <van-icon
+                  name="good-job-o"
+                  :color="info.attitude === 1 ? '#ee0a24' : '#595c5a'"
+                />
+              </van-badge>
+            </template>
+          </van-goods-action-icon>
+          <van-goods-action-icon>
+            <template #icon>
+              <van-icon name="share" />
+            </template>
+          </van-goods-action-icon>
+        </div>
+      </van-goods-action>
+      <van-popup
+        class="liuyanBox"
+        round
+        v-model="show"
+        position="bottom"
+        :style="{ height: '20%' }"
+      >
+        <div class="liuyan">
+          <van-field
+            v-model="message"
+            rows="2"
+            autosize
+            type="textarea"
+            maxlength="50"
+            placeholder="请输入评论"
+            show-word-limit
+          />
+        </div>
+        <van-button type="default">发布</van-button>
+      </van-popup>
+    </van-list>
   </div>
 </template>
 
 <script>
-import { getDetails, cancelFocus, Focus, collection } from '@/api'
+import {
+  getDetails,
+  cancelFocus,
+  Focus,
+  collection,
+  cancelcollection,
+  like,
+  unlike,
+  getComments
+} from '@/api'
 import Nav from '@/components/navber'
 import dayjs from '@/utils/dayjs'
+import { ImagePreview } from 'vant'
+import Comments from '@/views/Details/components/comments'
 export default {
   data () {
     return {
@@ -80,7 +127,17 @@ export default {
       show: false,
       info: {},
       message: '',
-      isFocus: ''
+      showImg: false,
+      index: 0,
+      allImg: [],
+      start: 0,
+      comments: '',
+      loading: false,
+      error: false,
+      commentsList: [],
+      lastID: '',
+      endID: '',
+      finished: false
     }
   },
   computed: {
@@ -89,10 +146,30 @@ export default {
       return time
     }
   },
+  updated () {
+    this.previewImg()
+  },
   methods: {
+    previewImg () {
+      const contentEl = this.$refs.contentRef
+      const allImg = contentEl.querySelectorAll('img')
+      const images = []
+      allImg.forEach((item, index) => {
+        images.push(item.src)
+        item.onclick = () => {
+          ImagePreview({
+            images,
+            startPosition: index
+          })
+        }
+      })
+    },
+    onChange (index) {
+      this.index = index
+    },
     // 文章详情请求
-    async getDetails (id) {
-      const { data } = await getDetails(id)
+    async getDetails () {
+      const { data } = await getDetails(this.$route.query.id)
       this.info = data.data
       console.log(data)
     },
@@ -101,46 +178,100 @@ export default {
       try {
         if (this.info.is_followed) {
           this.jiazai = true
-          const data = await cancelFocus(this.info.aut_id)
-          console.log('取关', this.isFocus)
-          this.isFocus = data.data
-          this.getDetails(this.$route.query.id)
-          this.jiazai = false //
+          await cancelFocus(this.info.aut_id)
+          this.getDetails()
+          this.jiazai = false
         } else {
           this.jiazai = true
-          const data = await Focus(this.info.aut_id)
-          this.isFocus = data.data
-          console.log('关注', this.isFocus)
-          this.getDetails(this.$route.query.id)
-          this.jiazai = false //
+          await Focus(this.info.aut_id)
+          this.getDetails()
+          this.jiazai = false
         }
       } catch (error) {
         console.log(error)
       }
     },
+    // 收藏文章
     async collection () {
-      if (this.info.is_followed) {
-        this.jiazai = true
-        const data = await collection(this.info.art_id)
-        console.log('取关', this.isFocus)
-        this.isFocus = data.data
-        this.getDetails(this.$route.query.id)
-        this.jiazai = false //
-      } else {
-        this.jiazai = true
-        const data = await Focus(this.info.art_id)
-        this.isFocus = data.data
-        console.log('关注', this.isFocus)
-        this.getDetails(this.$route.query.id)
-        this.jiazai = false //
+      try {
+        if (this.info.is_collected) {
+          const data = await cancelcollection(this.info.art_id)
+          console.log(data)
+          this.getDetails()
+        } else {
+          const data = await collection(this.info.art_id)
+          console.log(data)
+          this.getDetails()
+        }
+      } catch (error) {
+        console.log(error)
+        this.$toast.fail(error.response.data.message)
       }
+    },
+    // 点赞
+    async like () {
+      try {
+        if (this.info.attitude === -1) {
+          const data = await like(this.info.art_id)
+          console.log(data)
+          this.getDetails()
+        } else {
+          const data = await unlike(this.info.art_id)
+          console.log(data)
+          this.getDetails()
+        }
+      } catch (error) {
+        console.log(error)
+        this.$toast.fail(error.response.data.message)
+      }
+    },
+    // 评论请求
+    async getComments () {
+      try {
+        if (this.commentsList.length > 0) {
+          this.comments = 'a'
+          const { data } = await getComments(
+            this.comments,
+            this.info.art_id,
+            this.lastID
+          )
+          this.commentsList.push(...data.data.results)
+          this.lastID = data.data.last_id
+          console.log('打印', this.commentsList)
+          this.loading = false
+          if (this.lastID === this.endID) {
+            this.finished = true
+            return
+          }
+        } else {
+          this.comments = 'a'
+          const { data } = await getComments(this.comments, this.info.art_id)
+          this.lastID = data.data.last_id
+          this.endID = data.data.end_id
+          if (this.endID === null) {
+            this.finished = true
+            return
+          }
+          console.log(this.lastID)
+          this.commentsList.push(...data.data.results)
+          console.log('打印', this.commentsList)
+          this.loading = false
+        }
+      } catch (error) {
+        console.log(error)
+        this.error = true
+      }
+    },
+    onLoad () {
+      this.getComments()
     }
   },
   created () {
-    this.getDetails(this.$route.query.id)
+    this.getDetails()
   },
   components: {
-    Nav
+    Nav,
+    Comments
   }
 }
 </script>
@@ -151,6 +282,9 @@ export default {
   padding: 0;
   margin: 0;
   font-style: normal;
+}
+.box {
+  margin-bottom: 100px;
 }
 .theme {
   width: 100%;
@@ -234,5 +368,8 @@ export default {
   background-color: #fff;
   color: #000;
   border: 1px solid #ebedf0;
+}
+.zwjs {
+  padding: 32px 0;
 }
 </style>

@@ -28,6 +28,7 @@
 <script>
 import {
   getMyChannels,
+  // getAllChannels,
   getChannel,
   setChannel,
   delChannels,
@@ -59,7 +60,9 @@ export default {
       try {
         if (!this.islogin()) {
           const myChannels = getChannel()
-          this.myChannels = myChannels
+          if (myChannels) {
+            this.myChannels = myChannels
+          }
         } else {
           const { data } = await getMyChannels()
           this.myChannels = data.data.channels

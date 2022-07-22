@@ -8,7 +8,7 @@ export const getDetails = (id) => {
     }
   })
 }
-
+// 关注博主
 export const Focus = (id) => {
   return requset({
     method: 'POST',
@@ -18,7 +18,7 @@ export const Focus = (id) => {
     }
   })
 }
-
+// 取消关注博主
 export const cancelFocus = (id) => {
   return requset({
     method: 'DELETE',
@@ -28,11 +28,41 @@ export const cancelFocus = (id) => {
     }
   })
 }
-
+// 收藏文章请求
 export const collection = (id) => {
   return requset({
     method: 'POST',
     url: '/v1_0/article/collections',
+    data: {
+      target: id
+    }
+  })
+}
+// 取消收藏文章
+export const cancelcollection = (id) => {
+  return requset({
+    method: 'DELETE',
+    url: `/v1_0/article/collections/${id}`,
+    data: {
+      target: id
+    }
+  })
+}
+// 文章点赞
+export const like = (id) => {
+  return requset({
+    method: 'POST',
+    url: '/v1_0/article/likings',
+    data: {
+      target: id
+    }
+  })
+}
+// 取消点赞
+export const unlike = (id) => {
+  return requset({
+    method: 'DELETE',
+    url: `/v1_0/article/likings/${id}`,
     data: {
       target: id
     }
