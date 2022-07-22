@@ -22,7 +22,7 @@ export default new Vuex.Store({
       setToken(payload)
     },
     setSearch (state, payload) {
-      state.Search.push(payload)
+      state.Search.unshift(payload)
       setSearchHistory(state.Search)
     },
     removeSearchHistory (state) {

@@ -9,7 +9,7 @@
         <span>{{ articleDesc }}</span>
       </div>
       <van-button
-        :loading="info.is_followed"
+        :loading="jiazai"
         type="info"
         round
         @click="Focus"
@@ -24,10 +24,12 @@
       <div class="xtb">
         <van-goods-action-icon>
           <template #icon>
-            <van-icon name="comment-o" />
+            <van-badge :content="0">
+              <van-icon name="comment-o" />
+            </van-badge>
           </template>
         </van-goods-action-icon>
-        <van-goods-action-icon>
+        <van-goods-action-icon @click="collection">
           <template #icon>
             <van-icon name="star-o" />
           </template>
@@ -68,12 +70,13 @@
 </template>
 
 <script>
-import { getDetails, cancelFocus, Focus } from '@/api'
+import { getDetails, cancelFocus, Focus, collection } from '@/api'
 import Nav from '@/components/navber'
 import dayjs from '@/utils/dayjs'
 export default {
   data () {
     return {
+      jiazai: false,
       show: false,
       info: {},
       message: '',
@@ -87,22 +90,49 @@ export default {
     }
   },
   methods: {
+    // 文章详情请求
     async getDetails (id) {
       const { data } = await getDetails(id)
       this.info = data.data
       console.log(data)
     },
+    // 关注请求
     async Focus () {
+      try {
+        if (this.info.is_followed) {
+          this.jiazai = true
+          const data = await cancelFocus(this.info.aut_id)
+          console.log('取关', this.isFocus)
+          this.isFocus = data.data
+          this.getDetails(this.$route.query.id)
+          this.jiazai = false //
+        } else {
+          this.jiazai = true
+          const data = await Focus(this.info.aut_id)
+          this.isFocus = data.data
+          console.log('关注', this.isFocus)
+          this.getDetails(this.$route.query.id)
+          this.jiazai = false //
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    async collection () {
       if (this.info.is_followed) {
-        const data = await cancelFocus(this.info.aut_id)
+        this.jiazai = true
+        const data = await collection(this.info.art_id)
         console.log('取关', this.isFocus)
         this.isFocus = data.data
         this.getDetails(this.$route.query.id)
+        this.jiazai = false //
       } else {
-        const data = await Focus(this.info.aut_id)
+        this.jiazai = true
+        const data = await Focus(this.info.art_id)
         this.isFocus = data.data
         console.log('关注', this.isFocus)
         this.getDetails(this.$route.query.id)
+        this.jiazai = false //
       }
     }
   },

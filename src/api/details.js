@@ -28,3 +28,13 @@ export const cancelFocus = (id) => {
     }
   })
 }
+
+export const collection = (id) => {
+  return requset({
+    method: 'POST',
+    url: '/v1_0/article/collections',
+    data: {
+      target: id
+    }
+  })
+}
