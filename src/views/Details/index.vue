@@ -51,7 +51,7 @@
         <div class="xtb">
           <van-goods-action-icon>
             <template #icon>
-              <van-badge :content="info.comm_count">
+              <van-badge :content="commentsNum">
                 <van-icon name="comment-o" />
               </van-badge>
             </template>
@@ -99,12 +99,11 @@
             show-word-limit
           />
         </div>
-        <van-button type="default">发布</van-button>
+        <van-button type="default" @click="setComments">发布</van-button>
       </van-popup>
     </van-list>
   </div>
 </template>
-
 <script>
 import {
   getDetails,
@@ -114,7 +113,8 @@ import {
   cancelcollection,
   like,
   unlike,
-  getComments
+  getComments,
+  setComments
 } from '@/api'
 import Nav from '@/components/navber'
 import dayjs from '@/utils/dayjs'
@@ -131,13 +131,13 @@ export default {
       index: 0,
       allImg: [],
       start: 0,
-      comments: '',
       loading: false,
       error: false,
       commentsList: [],
       lastID: '',
       endID: '',
-      finished: false
+      finished: false,
+      commentsNum: ''
     }
   },
   computed: {
@@ -171,7 +171,7 @@ export default {
     async getDetails () {
       const { data } = await getDetails(this.$route.query.id)
       this.info = data.data
-      console.log(data)
+      console.log('文章详情', data)
     },
     // 关注请求
     async Focus () {
@@ -189,6 +189,7 @@ export default {
         }
       } catch (error) {
         console.log(error)
+        this.$toast.fail(error.response.data.message)
       }
     },
     // 收藏文章
@@ -229,12 +230,7 @@ export default {
     async getComments () {
       try {
         if (this.commentsList.length > 0) {
-          this.comments = 'a'
-          const { data } = await getComments(
-            this.comments,
-            this.info.art_id,
-            this.lastID
-          )
+          const { data } = await getComments('a', this.info.art_id, this.lastID)
           this.commentsList.push(...data.data.results)
           this.lastID = data.data.last_id
           console.log('打印', this.commentsList)
@@ -244,15 +240,15 @@ export default {
             return
           }
         } else {
-          this.comments = 'a'
-          const { data } = await getComments(this.comments, this.info.art_id)
+          const { data } = await getComments('a', this.info.art_id)
           this.lastID = data.data.last_id
           this.endID = data.data.end_id
+          this.commentsNum = data.data.total_count
           if (this.endID === null) {
             this.finished = true
             return
           }
-          console.log(this.lastID)
+          console.log('评论数据', data)
           this.commentsList.push(...data.data.results)
           console.log('打印', this.commentsList)
           this.loading = false
@@ -264,6 +260,27 @@ export default {
     },
     onLoad () {
       this.getComments()
+    },
+    // 发表评论
+    async setComments () {
+      this.$toast.loading({
+        message: '加载中...',
+        forbidClick: true,
+        duration: 0
+      })
+      try {
+        const res = await setComments(this.info.art_id, this.message)
+        this.getDetails()
+        this.commentsList = []
+        this.getComments()
+        console.log('发布评论', res)
+        this.$toast.success('发布成功')
+        this.show = false
+      } catch (error) {
+        console.log(error)
+        this.$toast.fail('')
+      }
+      this.$toast.clear()
     }
   },
   created () {

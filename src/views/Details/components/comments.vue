@@ -11,35 +11,53 @@
         </div>
         <p>{{ item.content }}</p>
         <div class="floor">
-          <span>{{ articleDesc }}</span>
-          <van-button plain hairline type="info" round
+          <span>{{ articleDesc(item.pubdate) }}</span>
+          <van-button
+            plain
+            hairline
+            type="info"
+            round
+            @click="reply(item.com_id)"
             >回复{{ item.reply_count }}</van-button
           >
         </div>
       </div>
     </div>
+    <!-- 评论的评论 -->
+    <van-popup v-model="show" position="bottom" :style="{ height: '100%' }">
+      <van-nav-bar title="标题" left-arrow @click-left="onClickLeft" />
+    </van-popup>
   </div>
 </template>
 
 <script>
 // 评论请求
 import dayjs from '@/utils/dayjs'
-
+import { getComments } from '@/api'
 export default {
   data () {
-    return {}
+    return {
+      show: false
+    }
   },
   props: {
     commentsList: {
-      type: Array
-      //   required: true
+      type: Array,
+      required: true
     }
   },
-  methods: {},
-  computed: {
-    articleDesc () {
-      const time = dayjs(this.commentsList.pubdate).fromNow()
+  methods: {
+    articleDesc (tm) {
+      const time = dayjs(tm).fromNow()
       return time
+    },
+    async reply (id) {
+      this.show = true
+      const res = await getComments('c', id)
+      console.log(res)
+    },
+    onClickLeft () {
+      this.show = false
     }
   }
 }

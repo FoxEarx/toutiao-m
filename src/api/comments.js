@@ -10,3 +10,15 @@ export const getComments = (a, id, lastId) => {
     }
   })
 }
+// 对文章评论接口
+export const setComments = (id, content, hfID) => {
+  return requset({
+    method: 'POST',
+    url: '/v1_0/comments',
+    data: {
+      target: id,
+      content: content,
+      art_id: hfID
+    }
+  })
+}
