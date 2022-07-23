@@ -13,7 +13,11 @@ export default new Vuex.Store({
   state: {
     // 用户的token
     user: getToken() || {},
-    Search: getSearchHistory() || []
+    Search: getSearchHistory() || [],
+    Master: [],
+    comments: [],
+    commentID: '',
+    wenzhangID: ''
   },
 
   mutations: {

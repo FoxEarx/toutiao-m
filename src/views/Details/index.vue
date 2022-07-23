@@ -35,7 +35,15 @@
       ></div>
       <van-divider class="zwjs">正文结束</van-divider>
       <!-- 评论 -->
-      <Comments :commentsList="commentsList"></Comments>
+      <Comments @isShow="isShowFn" :commentsList="commentsList"></Comments>
+      <van-popup v-model="isShow" position="bottom" :style="{ height: '100%' }">
+        <van-nav-bar
+          :title="num === 0 ? '暂无回复' : `${num}条回复`"
+          left-arrow
+          @click-left="onClickLeft"
+        />
+        <Comments></Comments>
+      </van-popup>
       <!-- 图片详情 -->
       <van-image-preview
         v-model="showImg"
@@ -120,6 +128,7 @@ import Nav from '@/components/navber'
 import dayjs from '@/utils/dayjs'
 import { ImagePreview } from 'vant'
 import Comments from '@/views/Details/components/comments'
+
 export default {
   data () {
     return {
@@ -137,7 +146,9 @@ export default {
       lastID: '',
       endID: '',
       finished: false,
-      commentsNum: ''
+      commentsNum: '',
+      isShow: false,
+      num: ''
     }
   },
   computed: {
@@ -171,6 +182,7 @@ export default {
     async getDetails () {
       const { data } = await getDetails(this.$route.query.id)
       this.info = data.data
+      this.$store.state.wenzhangID = data.data.art_id
       console.log('文章详情', data)
     },
     // 关注请求
@@ -244,12 +256,12 @@ export default {
           this.lastID = data.data.last_id
           this.endID = data.data.end_id
           this.commentsNum = data.data.total_count
-          if (this.endID === null) {
+          console.log('评论数据', data)
+          this.commentsList.push(...data.data.results)
+          if (this.endID === this.lastID) {
             this.finished = true
             return
           }
-          console.log('评论数据', data)
-          this.commentsList.push(...data.data.results)
           console.log('打印', this.commentsList)
           this.loading = false
         }
@@ -281,6 +293,18 @@ export default {
         this.$toast.fail('')
       }
       this.$toast.clear()
+    },
+    isShowFn (num) {
+      this.isShow = true
+      this.num = num
+      this.getDetails()
+      this.getComments()
+    },
+    onClickLeft () {
+      this.isShow = false
+    },
+    fb (index) {
+      this.show = index
     }
   },
   created () {
@@ -357,6 +381,7 @@ export default {
   }
 }
 .liuyanBox {
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
