@@ -32,3 +32,10 @@ export const getUserInfo = () => {
     url: '/v1_0/user'
   })
 }
+
+// 用户关注列表
+export const getUserFocus = () => {
+  return request({
+    url: '/v1_0/user/followings'
+  })
+}

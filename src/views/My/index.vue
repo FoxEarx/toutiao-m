@@ -74,7 +74,7 @@
 </template>
 
 <script>
-import { getUserInfo } from '@/api/user'
+import { getUserInfo, getUserFocus } from '@/api/user'
 export default {
   name: 'My',
   data () {
@@ -84,6 +84,7 @@ export default {
   },
   created () {
     this.getUserInfo()
+    this.getUserFocus()
   },
   computed: {
     isLogin () {
@@ -120,6 +121,10 @@ export default {
           this.$toast.fail('登录失败')
         }
       }
+    },
+    async getUserFocus () {
+      const res = await getUserFocus()
+      console.log(res)
     }
   }
 }
