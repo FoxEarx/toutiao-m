@@ -155,8 +155,6 @@ export default {
           this.message,
           this.$store.state.wenzhangID
         )
-        // this.reply(this.id, this.item)
-        this.$refs.cl.onclick()
       } catch (error) {
         this.$toast.fail(error.response.data.message)
       }
