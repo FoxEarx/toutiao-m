@@ -39,3 +39,12 @@ export const getUserFocus = () => {
     url: '/v1_0/user/followings'
   })
 }
+// 编辑用户信息
+
+export const UserProfile = (data) => {
+  return request({
+    method: 'PATCH',
+    url: '/v1_0/user/profile',
+    data
+  })
+}

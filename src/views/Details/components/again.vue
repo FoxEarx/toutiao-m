@@ -109,6 +109,8 @@ export default {
     },
     likeH (master) {
       master.is_liking = !master.is_liking
+      this.$store.state.master = master
+
       this.$emit('likeh', master.is_liking)
     }
   }
