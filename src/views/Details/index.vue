@@ -35,14 +35,20 @@
       ></div>
       <van-divider class="zwjs">正文结束</van-divider>
       <!-- 评论 -->
-      <Comments @isShow="isShowFn" :commentsList="commentsList"></Comments>
+      <Comments
+        @commentlike="commentlike"
+        @THIScomments="THIScommentsFN"
+        :commentsList="commentsList"
+      ></Comments>
       <van-popup v-model="isShow" position="bottom" :style="{ height: '100%' }">
-        <van-nav-bar
-          :title="num === 0 ? '暂无回复' : `${num}条回复`"
-          left-arrow
-          @click-left="onClickLeft"
-        />
-        <Comments></Comments>
+        <Again
+          @likeh="commentlike"
+          @commentlike="commentlike"
+          :master="master"
+          :replyInfo="replyInfo"
+          @close="close"
+          @reflyPL="reflyPL"
+        ></Again>
       </van-popup>
       <!-- 图片详情 -->
       <van-image-preview
@@ -84,7 +90,7 @@
           </van-goods-action-icon>
           <van-goods-action-icon>
             <template #icon>
-              <van-icon name="share" />
+              <van-icon name="share" @click="share" />
             </template>
           </van-goods-action-icon>
         </div>
@@ -109,6 +115,12 @@
         </div>
         <van-button type="default" @click="setComments">发布</van-button>
       </van-popup>
+      <van-share-sheet
+        v-model="showShare"
+        :options="options"
+        title="立即分享给好友"
+        description="描述信息"
+      />
     </van-list>
   </div>
 </template>
@@ -122,12 +134,15 @@ import {
   like,
   unlike,
   getComments,
-  setComments
+  setComments,
+  commentsLike,
+  NOcommentsLike
 } from '@/api'
 import Nav from '@/components/navber'
 import dayjs from '@/utils/dayjs'
 import { ImagePreview } from 'vant'
 import Comments from '@/views/Details/components/comments'
+import Again from '@/views/Details/components/again'
 
 export default {
   data () {
@@ -148,7 +163,18 @@ export default {
       finished: false,
       commentsNum: '',
       isShow: false,
-      num: ''
+      replyInfo: '',
+      master: '',
+      replyID: '',
+      showShare: false,
+      options: [
+        { name: '微信', icon: 'wechat' },
+        { name: '微博', icon: 'weibo' },
+        { name: '复制链接', icon: 'link', description: '描述信息' },
+        { name: '分享海报', icon: 'poster' },
+        { name: '二维码', icon: 'qrcode' }
+      ],
+      masterTwo: ''
     }
   },
   computed: {
@@ -280,31 +306,67 @@ export default {
         forbidClick: true,
         duration: 0
       })
-      try {
-        const res = await setComments(this.info.art_id, this.message)
-        this.getDetails()
-        this.commentsList = []
-        this.getComments()
-        console.log('发布评论', res)
-        this.$toast.success('发布成功')
-        this.show = false
-      } catch (error) {
-        console.log(error)
-        this.$toast.fail('')
+      if (this.replyID.length !== 0) {
+        try {
+          await setComments(this.replyID, this.message, this.info.art_id)
+          this.commentsList = []
+          this.getComments()
+          this.THIScommentsFN()
+          this.$toast.success('发布成功')
+          this.show = false
+          this.$store.state.master.reply_count++
+        } catch (error) {
+          console.log(error)
+          this.$toast.fail(error.response.data.message)
+        }
+      } else {
+        try {
+          const res = await setComments(this.info.art_id, this.message)
+          this.getDetails()
+          this.commentsList = []
+          this.getComments()
+          console.log('发布评论', res)
+          this.$toast.success('发布成功')
+          this.show = false
+        } catch (error) {
+          console.log(error)
+          this.$toast.fail(error.response.data.message)
+        }
       }
       this.$toast.clear()
-    },
-    isShowFn (num) {
-      this.isShow = true
-      this.num = num
-      this.getDetails()
-      this.getComments()
     },
     onClickLeft () {
       this.isShow = false
     },
-    fb (index) {
-      this.show = index
+    // 该评论具体信息
+    async THIScommentsFN () {
+      this.master = this.$store.state.master
+      console.log('-----', this.master)
+      const { data } = await getComments('c', this.master.com_id)
+      this.replyInfo = data.data
+      console.log(this.replyInfo)
+      this.isShow = true
+    },
+    reflyPL (id) {
+      this.show = true
+      this.replyID = id
+    },
+    // 关闭评论的评论弹窗
+    close () {
+      this.isShow = false
+    },
+    // 分享
+    share () {
+      this.showShare = true
+    },
+    // 点赞
+    async commentlike (ele) {
+      this.masterTwo = this.$store.state.master
+      if (ele) {
+        await commentsLike(this.masterTwo.com_id)
+      } else {
+        await NOcommentsLike(this.masterTwo.com_id)
+      }
     }
   },
   created () {
@@ -312,7 +374,8 @@ export default {
   },
   components: {
     Nav,
-    Comments
+    Comments,
+    Again
   }
 }
 </script>

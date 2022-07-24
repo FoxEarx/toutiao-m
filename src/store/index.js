@@ -14,10 +14,8 @@ export default new Vuex.Store({
     // 用户的token
     user: getToken() || {},
     Search: getSearchHistory() || [],
-    Master: [],
-    comments: [],
-    commentID: '',
-    wenzhangID: ''
+    master: {},
+    masterTwo: {}
   },
 
   mutations: {

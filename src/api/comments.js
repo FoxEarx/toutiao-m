@@ -22,3 +22,24 @@ export const setComments = (id, content, hfID) => {
     }
   })
 }
+// 对评论或评论的评论点赞
+export const commentsLike = (id) => {
+  return requset({
+    method: 'POST',
+    url: '/v1_0/comment/likings',
+    data: {
+      target: id
+    }
+  })
+}
+// 取消对评论或评论的评论点赞
+
+export const NOcommentsLike = (target) => {
+  return requset({
+    method: 'DELETE',
+    url: `/v1_0/comment/likings/${target}`,
+    data: {
+      target
+    }
+  })
+}

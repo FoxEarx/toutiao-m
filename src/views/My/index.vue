@@ -124,7 +124,7 @@ export default {
     },
     async getUserFocus () {
       const res = await getUserFocus()
-      console.log(res)
+      console.log('该用户关注数量', res)
     }
   }
 }

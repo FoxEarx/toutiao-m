@@ -1,6 +1,44 @@
 <template>
   <div>
-    <div class="box" v-for="(item, index) in commentsList" :key="index">
+    <van-nav-bar
+      :title="
+        replyInfo.total_count === 0
+          ? '暂无回复'
+          : `${replyInfo.total_count}条回复`
+      "
+      left-arrow
+      @click-left="onClickLeft"
+    />
+    <!-- 楼主 -->
+    <div class="box">
+      <div class="img">
+        <van-image round :src="master.aut_photo" />
+      </div>
+      <div class="comments">
+        <div class="header">
+          <div class="author">{{ master.aut_name }}</div>
+          <div
+            :style="master.is_liking ? 'color: red' : 'color:#222'"
+            @click="likeH(master)"
+          >
+            <van-icon name="good-job-o" />赞
+          </div>
+        </div>
+        <p>{{ master.content }}</p>
+        <div class="floor">
+          <span>{{ articleDesc(master.pubdate) }}</span>
+          <van-button plain hairline type="info" round
+            >回复{{ master.reply_count }}</van-button
+          >
+        </div>
+      </div>
+    </div>
+    <!-- ---------------------------------------- -->
+    <van-cell-group class="Allcomments">
+      <van-cell title="全部回复" />
+    </van-cell-group>
+    <!-- 全部评论 -->
+    <div class="box" v-for="(item, index) in replyInfo.results" :key="index">
       <div class="img">
         <van-image round :src="item.aut_photo" />
       </div>
@@ -17,48 +55,61 @@
         <p>{{ item.content }}</p>
         <div class="floor">
           <span>{{ articleDesc(item.pubdate) }}</span>
-          <van-button
-            ref="art_id"
-            plain
-            hairline
-            type="info"
-            round
-            @click="reply(item)"
+          <van-button plain hairline type="info" round
             >回复{{ item.reply_count }}</van-button
           >
         </div>
       </div>
     </div>
-    <!-- </van-list> -->
+    <!-- 发表评论 -->
+    <van-nav-bar class="tabbar">
+      <template #title>
+        <van-button round @click="pinglun">评论</van-button>
+      </template>
+    </van-nav-bar>
   </div>
 </template>
-
 <script>
-// 评论请求
 import dayjs from '@/utils/dayjs'
+
 export default {
   data () {
-    return {}
+    return {
+      error: false,
+      finished: false,
+      loading: false
+    }
   },
   props: {
-    commentsList: {
-      type: Array
-      // required: true
+    replyInfo: {
+      type: [Object, String, Array]
+    },
+    master: {
+      type: [Object, String, Array]
     }
   },
   methods: {
+    onClickLeft () {
+      this.$emit('close')
+    },
     articleDesc (tm) {
       const time = dayjs(tm).fromNow()
       return time
     },
-    reply (item) {
-      this.$store.state.master = item
-      this.$emit('THIScomments')
+    pinglun () {
+      this.$emit('reflyPL', this.master.com_id)
+    },
+    onLoad () {
+      console.log(1)
     },
     like (item) {
-      item.is_liking = !item.is_liking
       this.$store.state.master = item
+      item.is_liking = !item.is_liking
       this.$emit('commentlike', item.is_liking)
+    },
+    likeH (master) {
+      master.is_liking = !master.is_liking
+      this.$emit('likeh', master.is_liking)
     }
   }
 }
