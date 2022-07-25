@@ -68,6 +68,7 @@
       :style="{ height: '30%' }"
     >
       <van-picker
+        item-height="30px"
         title="标题"
         v-show="userSexShow"
         show-toolbar
