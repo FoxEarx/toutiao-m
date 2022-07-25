@@ -48,3 +48,16 @@ export const UserProfile = (data) => {
     data
   })
 }
+export const UserProfileInfo = () => {
+  return request({
+    url: '/v1_0/user/profile'
+  })
+}
+// 提交图片
+export const updateUserPhoto = (data) => {
+  return request({
+    method: 'PATCH',
+    url: '/v1_0/user/photo',
+    data
+  })
+}

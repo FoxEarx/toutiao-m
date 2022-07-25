@@ -11,8 +11,11 @@
       title="头像"
       is-link
       value="内容"
-      @click="avatar"
+      @click="$refs.img.click()"
     >
+      <template #default>
+        <van-image width="30" height="30" round :src="userInitial.photo" />
+      </template>
     </van-cell>
     <van-cell
       title="昵称"
@@ -24,11 +27,17 @@
     <van-cell
       title="性别"
       is-link
-      value="内容"
+      :value="userInitial.gender === 1 ? '女' : '男'"
       class="cellele"
       @click="userSexShow = true"
     />
-    <van-cell title="生日" is-link value="内容" class="cellele" />
+    <van-cell
+      title="生日"
+      is-link
+      :value="userInitial.birthday"
+      class="cellele"
+      @click="userBirthdayShow = true"
+    />
     <input
       type="file"
       name=""
@@ -36,6 +45,7 @@
       ref="img"
       hidden
       accept="image/png,image/jpeg"
+      @change="Upload"
     />
     <!-- 姓名 -->
     <van-popup
@@ -73,16 +83,45 @@
         v-show="userSexShow"
         show-toolbar
         :columns="columns"
-        @confirm="onConfirm"
+        @confirm="UserSexFn"
         @cancel="userSexShow = false"
-        @change="onChange"
+      />
+    </van-popup>
+    <!-- 生日 -->
+    <van-popup
+      v-model="userBirthdayShow"
+      position="bottom"
+      :style="{ height: '40%' }"
+    >
+      <van-datetime-picker
+        v-model="currentDate"
+        type="date"
+        title="选择年月日"
+        :min-date="minDate"
+        :max-date="maxDate"
+        @confirm="userBirthdayShowFn"
+        @cancel="userBirthdayShow = false"
+      />
+    </van-popup>
+    <!-- 头像 -->
+    <van-popup
+      v-model="isUpdatePhotoShow"
+      style="height: 100%"
+      position="bottom"
+    >
+      <Img
+        :img="img"
+        @close="isUpdatePhotoShow = false"
+        @updateUserPhoto="photo"
       />
     </van-popup>
   </div>
 </template>
 
 <script>
-import { UserProfile, getUserInfo } from '@/api'
+import { UserProfile, UserProfileInfo } from '@/api'
+import dayjs from '@/utils/dayjs'
+import Img from '@/views/Userinfo/components/img'
 export default {
   data () {
     return {
@@ -90,31 +129,84 @@ export default {
       userInitial: {},
       userNameShow: false,
       userSexShow: false,
-      columns: ['男', '女']
+      columns: ['男', '女'],
+      userBirthdayShow: false,
+      minDate: new Date(1900, 0, 1),
+      maxDate: new Date(2025, 10, 1),
+      currentDate: new Date(2021, 0, 17),
+      img: '',
+      isUpdatePhotoShow: false
     }
   },
   methods: {
+    photo (img) {
+      this.userInitial.photo = img
+    },
+    Upload (e) {
+      // 拿到图片file
+      const file = e.target.files[0]
+      // 转换成地址
+      this.img = window.URL.createObjectURL(file)
+      this.isUpdatePhotoShow = true
+      this.$refs.img.value = ''
+    },
     toMy () {
       this.$toast.clear()
       this.$router.back()
     },
-    avatar () {
-      this.$refs.img.click()
-    },
     async UserProfile () {
-      const res = await UserProfile({})
-      console.log(res)
+      try {
+        const res = await UserProfile({
+          name: this.message,
+          gender: this.userInitial.gender,
+          birthday: this.userInitial.birthday
+        })
+        console.log(res)
+        this.$toast.success('更新成功')
+      } catch (error) {
+        console.log(error)
+        this.$toast.fail('更新失败')
+      }
     },
-    async getUserInfo () {
-      const { data } = await getUserInfo()
-      this.userInitial = data.data
-      console.log('用户资料', data.data)
+    async UserProfileInfo () {
+      try {
+        const { data } = await UserProfileInfo()
+        this.userInitial = data.data
+        console.log('用户资料', data.data)
+        this.$toast.success('更新成功')
+      } catch (error) {
+        console.log(error)
+        this.$toast.fail('更新失败')
+      }
     },
-    confirmName () {}
+    confirmName () {
+      this.UserProfile()
+      this.userInitial.name = this.message
+      // this.UserProfileInfo()
+      this.userNameShow = false
+    },
+    UserSexFn (ele) {
+      if (ele === '男') {
+        this.userInitial.gender = 0
+      } else if (ele === '女') {
+        this.userInitial.gender = 1
+      }
+      this.userSexShow = false
+      this.UserProfile()
+    },
+    userBirthdayShowFn (value) {
+      this.userBirthdayShow = false
+      this.userInitial.birthday = dayjs(value).format('YYYY-MM-DD')
+      this.UserProfile()
+      console.log(this.userInitial.birthday)
+    }
   },
   created () {
-    this.getUserInfo()
+    this.UserProfileInfo()
     this.UserProfile()
+  },
+  components: {
+    Img
   }
 }
 </script>
